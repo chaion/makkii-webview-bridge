@@ -128,7 +128,7 @@ class Messager {
             return (...args) => this.send(name, args);
         };
         this.define = (name, func) => {
-            this.callbacks[name] = (...args) => func(...args);
+            this.callbacks[name] = (args) => func(...args);
             if (this.isConnect()) {
                 this.sync();
             }
