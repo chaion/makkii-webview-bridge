@@ -168,7 +168,7 @@ export class Messager {
     }
 
     define = (name: string, func: TCallBack) => {
-        this.callbacks[name] = (...args: any) => func(...args);
+        this.callbacks[name] = (args: any) => func(...args);
         if(this.isConnect()){
             this.sync();
         }

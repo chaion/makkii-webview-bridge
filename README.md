@@ -11,23 +11,31 @@ makkii.getCurrentAccount().then(console.log) // get current account
 ```
 ## Api
 ### `getcurrentAccount`
-- Return 
+- Args
+```js
+symbol // coin type
 ```
+- Return 
+```js
 promise<string> //current makkii account
 ```
 ### `switchAccount`
 > return to makkii and switch current account
-- Return
+- Args
+```js
+symbol // coin type
 ```
-promise<string> // new account
+- Return
+```js
+Promise<string> // new account
 ```
 ### sendTx
 > return to makkii and send a Tx
 - Args
-```
+```js
 {to: string, value: number, gasLimit: number, gasPrice: number}
 ```
 - Return
-```
+```js
 Promise<string> // txhash
 ```
