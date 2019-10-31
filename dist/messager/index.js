@@ -137,7 +137,7 @@ class Messager {
         // bind B client sync func
         this.__sync = this.bind(SYNC_COMMAND);
         // define A clint sync func
-        this.define(SYNC_COMMAND, this.sync);
+        this.define(SYNC_COMMAND, this._sync);
     }
 }
 exports.Messager = Messager;
