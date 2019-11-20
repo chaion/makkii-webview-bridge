@@ -1,20 +1,22 @@
-import {Messager} from './messager';
-const isBrowser  = typeof window !== 'undefined';
+import { Messager } from './messager';
+const isBrowser = typeof window !== 'undefined';
 
 
 export class Makkii {
     messager: Messager;
     account: string = '';
+    lang: string = '';
     sendTx: (...args: any) => Promise<any>;
-    _getCurrentAccount:(...args: any) => Promise<any>;
-    _switchAccount:(...args: any) => Promise<any>;
+    _getCurrentAccount: (...args: any) => Promise<any>;
+    _switchAccount: (...args: any) => Promise<any>;
+    _getCurrentLang: (...args: any) => Promise<any>;
 
     constructor() {
-        this.messager =  new Messager( (data:any)=> {
-            const {ReactNativeWebView} = window;
-            if(isBrowser && ReactNativeWebView) {
+        this.messager = new Messager((data: any) => {
+            const { ReactNativeWebView } = window;
+            if (isBrowser && ReactNativeWebView) {
                 ReactNativeWebView.postMessage(JSON.stringify(data))
-            }else{
+            } else {
                 throw 'No ReactNativeWebView'
             }
         });
@@ -22,16 +24,18 @@ export class Makkii {
         this.sendTx = this.messager.bind('sendTx');
         this._switchAccount = this.messager.bind('switchAccount');
         this._getCurrentAccount = this.messager.bind('getCurrentAccount');
+        this._getCurrentLang = this.messager.bind('getCurrentLang');
+        this.getCurrentLang();
     }
 
     setCurretnAccount = (account: string) => {
         this.account = account;
     }
-    getCurrentAccount = ()=> new Promise((resolve,reject)=>{
-        this._getCurrentAccount().then(r=>{
-            this.account =r;
+    getCurrentAccount = () => new Promise((resolve, reject) => {
+        this._getCurrentAccount().then(r => {
+            this.account = r;
             resolve(r)
-        }).catch(e=>{
+        }).catch(e => {
             reject(e)
         });
     })
@@ -43,8 +47,14 @@ export class Makkii {
             reject(e)
         })
     })
-    isconnect = ()=>this.messager.isConnect();
 
+    getCurrentLang = async () => {
+        const lang = await this._getCurrentAccount();
+        this.lang = lang;
+        return lang;
+    }
+
+    isconnect = () => this.messager.isConnect();
 }
 
 
@@ -70,7 +80,7 @@ if (isBrowser) {
         };
         Object.defineProperty(window, 'originalPostMessage', descriptor);
     }
-    document.addEventListener('FROM_MAKKII', (e:any) => {
+    document.addEventListener('FROM_MAKKII', (e: any) => {
         makkii.messager.listener(e.data);
     });
 }
