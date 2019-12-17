@@ -9,7 +9,6 @@ export class Makkii {
     sendTx: (...args: any) => Promise<any>;
     _getCurrentAccount: (...args: any) => Promise<any>;
     _switchAccount: (...args: any) => Promise<any>;
-    _getCurrentLang: (...args: any) => Promise<any>;
 
     constructor() {
         this.messager = new Messager((data: any) => {
@@ -24,8 +23,6 @@ export class Makkii {
         this.sendTx = this.messager.bind('sendTx');
         this._switchAccount = this.messager.bind('switchAccount');
         this._getCurrentAccount = this.messager.bind('getCurrentAccount');
-        this._getCurrentLang = this.messager.bind('getCurrentLang');
-        this.getCurrentLang();
     }
 
     setCurretnAccount = (account: string) => {
@@ -48,11 +45,6 @@ export class Makkii {
         })
     })
 
-    getCurrentLang = async () => {
-        const lang = await this._getCurrentAccount();
-        this.lang = lang;
-        return lang;
-    }
 
     isconnect = () => this.messager.isConnect();
 }
