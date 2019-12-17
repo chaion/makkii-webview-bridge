@@ -2,12 +2,15 @@
   "name": "makkii-webview-bridge",
   "version": "1.0.0",
   "description": "bridge between makkii and webview",
-  "main": "dist/browser.js",
+  "main": "lib/browser.js",
   "author": "Chen Cheng",
   "license": "MIT",
   "scripts": {
     "package": "tsc"
   },
+  "files":[
+    "lib"
+  ],
   "devDependencies": {
     "typescript": "^3.6.4"
   }

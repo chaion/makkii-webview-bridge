@@ -1,5 +1,4 @@
 import { Messager, Ipayload } from "./messager";
-import { evtCallback } from "./messager/event_bus";
 
 export default class Bridge {
     messager: Messager;
@@ -33,7 +32,5 @@ export default class Bridge {
             this.messager.listener(data)
         }
     } 
-    addEventListener =  (name: string, cb: evtCallback<Ipayload<any>> )=>this.messager.addEventListener(name, cb)
-    removeEventListener = (name: string, cb: evtCallback<Ipayload<any>> )=>this.messager.removeEventListener(name, cb)
     isConnect = ()=> this.messager.isConnect
 }

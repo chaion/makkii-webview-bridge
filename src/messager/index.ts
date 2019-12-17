@@ -1,34 +1,60 @@
-import { EventBus,evtCallback } from './event_bus';
+import { EventBus } from './event_bus';
 
 
+/**
+ * Payload status
+ * 
+ */
 enum PayloadStatus {
     success,
-    fail
+    fail,
+    pending
 }
 
 
-export interface Ipayload<T> {
+export interface Ipayload<T, V=PayloadStatus|string> {
     id: number
     command: string
     data: T
     reply: boolean
-    status?: PayloadStatus
+    status: V
 }
 
 type TCallBack = (...data: any) => any;
 
-class Deferred {
-    promise: Promise<any>;
-    resolve: (value?: any) => void = () => { };
-    reject: (reason?: any) => void = () => { };
+
+
+export class Deferred<T> extends EventBus<T> implements Promise<T> {
+    readonly [Symbol.toStringTag]: 'Promise'
+    promise: Promise<T>;
+    resolve: (value?: T) => void = () => { };
+    reject: (reason?: T) => void = () => { };
 
     constructor() {
+        super();
         this.promise = new Promise((resolve, reject) => {
             this.resolve = resolve;
-            this.reject = reject;
-        })
+            this.reject = reject
+        });
     }
+    public then = <TResult1 = T, TResult2 = never>(
+        onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+        onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+    ): Promise<TResult1 | TResult2> => {
+        return this.promise.then(onfulfilled, onrejected)
+    }
+
+    // the same signature as Promise.catch
+    public catch = <TResult = never>(
+        onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null
+    ): Promise<T | TResult> => {
+        return this.promise.catch(onRejected)
+    }
+
+
 }
+
+
 
 let count = 0;
 
@@ -48,15 +74,14 @@ export class Messager {
      * define A client and B client, and current client is A;
      */
 
-    private eventbus = new EventBus<Ipayload<any>>();
-    private transactions: { [key: string]: Deferred } = {};
+    private transactions: { [key: string]: Deferred<any> } = {};
     private callbacks: { [command: string]: TCallBack } = {};
     private needWait: Array<Ipayload<any>> = [];
     private senderEnable: boolean = true;
     private senderHandler: (data: any) => void;
-    private __sync: (...args:any)=> Promise<any>;
+    private __sync: (...args: any) => Deferred<any>;
 
-    fn:{[command: string]: (...args: any)=> Promise<any>} = {};
+    fn: { [command: string]: (...args: any) => Deferred<any> } = {};
 
 
 
@@ -69,25 +94,25 @@ export class Messager {
     }
 
     isConnect = () => {
-        return this.senderEnable&&this.needWait.length === 0
+        return this.senderEnable && this.needWait.length === 0
     }
 
-    addEventListener = (name: string, cb: evtCallback<Ipayload<any>> )=>this.eventbus.addEvtListener(name, cb)
-
-    removeEventListener = (name: string, cb: evtCallback<Ipayload<any>> )=>this.eventbus.removeEvtListener(name, cb)
+    setSenderHandler = (handler: (data:any) => void) =>{
+        this.senderHandler = handler;
+        this.initialize();
+    }
 
     private sender = (data: Ipayload<any>) => {
         const force = data.command === SYNC_COMMAND;
         if (!force && !this.isConnect()) {
             this.needWait.push(data)
         } else {
-            try{
+            try {
                 this.senderHandler(data)
-            }catch(e){
+            } catch (e) {
                 this.senderEnable = false;
             }
         }
-        this.eventbus.emit('send', data)
     }
 
     private send = (command: string, data: any) => {
@@ -96,11 +121,12 @@ export class Messager {
             data,
             id: getUID(),
             reply: false,
+            status: ''
         }
-        const defer = new Deferred();
+        const defer = new Deferred<any>();
         this.transactions[getTransactionKey(payload)] = defer;
         this.sender(payload);
-        return defer.promise;
+        return defer;
     }
 
     private reply = (data: Ipayload<any>, result: any, status: PayloadStatus) => {
@@ -115,61 +141,72 @@ export class Messager {
         if (data.reply) { // reply from  B
             const key = getTransactionKey(data);
             if (this.transactions[key]) {
-                if (PayloadStatus.success === data.status) {
-                    this.transactions[key].resolve(data.data)
-                } else {
-                    this.transactions[key].reject(data.data)
+                if (typeof data.status === 'string') {
+                    this.transactions[key].emit(data.status, data.data)
                 }
+                else {
+                    if (PayloadStatus.success === data.status) {
+                        this.transactions[key].resolve(data.data)
+                    }
+                    else {
+                        this.transactions[key].reject(data.data)
+                    }
+                    delete this.transactions[key];
+                }
+                
             }
-            delete this.transactions[key];
         } else if (this.callbacks[data.command]) { // request from B
             // have defined req's command
-            const result = this.callbacks[data.command](data.data);
+            const emitter = (emitType:string, emitData:any) => {
+                data.reply = true;
+                data.data = emitData;
+                data.status = emitType;
+                this.sender(data);
+            }
+            const result = this.callbacks[data.command]([...data.data,emitter]);
             if (result && result.then) {
                 // if result is a promise
                 result.then((d: any) => this.reply(data, d, PayloadStatus.success))
-                .catch((e: any)=>this.reply(data,e, PayloadStatus.fail))
-            }else{
+                    .catch((e: any) => this.reply(data, e, PayloadStatus.fail))
+            } else {
                 this.reply(data, result, PayloadStatus.success);
             }
-        }else {
+        } else {
             // no define command
             this.reply(data, null, PayloadStatus.fail);
         }
-        this.eventbus.emit('receive', data)
     }
 
-    private initialize = ()=>{
-        if(this.needWait.length>0){
+    private initialize = () => {
+        if (this.needWait.length > 0) {
             const waiting = this.needWait;
-            this.needWait=[];
+            this.needWait = [];
             waiting.forEach(payload => {
                 this.sender(payload)
             });
-            this.eventbus.emit('ready')
         }
     }
 
-    private _sync = (defines: string[] =[]) => {
-        defines.filter(d=>!(d in this.fn))
-        .map(d=>{
-            this.fn[d] = this.bind(d)
-        });
+    private _sync = (defines: string[] = []) => {
+        defines.filter(d => !(d in this.fn))
+            .map(d => {
+                this.fn[d] = this.bind(d)
+            });
         this.initialize();
         return Object.keys(this.callbacks);
     }
 
-    sync = ()=> {
+    sync = () => {
         this.__sync(Object.keys(this.callbacks)).then(this._sync)
     }
 
-    bind = (name:string) => {
+    bind = (name: string) => {
         return (...args: any) => this.send(name, args);
     }
 
     define = (name: string, func: TCallBack) => {
         this.callbacks[name] = (args: any) => func(...args);
-        if(this.isConnect()){
+        if (this.isConnect()) {
             this.sync();
         }
     }
