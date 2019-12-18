@@ -1,4 +1,4 @@
-import { Messager, Ipayload } from "./messager";
+import { Messager } from "./messager";
 
 export default class Bridge {
     messager: Messager;
@@ -20,6 +20,7 @@ export default class Bridge {
     }
     bind=(name: string)=>this.messager.bind(name)
     define=(name: string, func: (...data: any) => any)=>this.messager.define(name, func)
+    setSenderHandler = (handler: (data: any) => void) => this.messager.setSenderHandler(handler)
     listener = (e:any)=>{
         let data : any;
         try {
