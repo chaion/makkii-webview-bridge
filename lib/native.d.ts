@@ -5,8 +5,8 @@ declare type WebViewGetter<T extends IWebview> = () => T;
 export default class Bridge<T extends IWebview> {
     private webViewGetter;
     constructor(getter: WebViewGetter<T>);
-    bind: (name: string) => (...args: any) => import("./messager").Deferred<any>;
-    define: (name: string, func: (...data: any) => any) => void;
+    bind: (name: string) => this;
+    define: (name: string, func: (...data: any) => any) => this;
     setwebViewGetter: (getter: WebViewGetter<T>) => void;
     listener: (e: any) => void;
     isConnect: () => () => boolean;

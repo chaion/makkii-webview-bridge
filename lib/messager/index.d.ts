@@ -46,6 +46,6 @@ export declare class Messager {
     private _sync;
     sync: () => void;
     bind: (name: string) => (...args: any) => Deferred<any>;
-    define: (name: string, func: TCallBack) => void;
+    define: (name: string, func: TCallBack) => this;
 }
 export {};

@@ -107,6 +107,7 @@ export class Messager {
             try {
                 this.senderHandler(data);
             } catch (e) {
+                this.needWait.push(data);
                 this.senderEnable = false;
             }
         }
@@ -216,5 +217,6 @@ export class Messager {
         if (this.isConnect()) {
             this.sync();
         }
+        return this;
     };
 }

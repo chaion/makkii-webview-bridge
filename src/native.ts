@@ -25,10 +25,15 @@ export default class Bridge<T extends IWebview> {
             }
         });
     }
-    bind = (name: string) => messager.bind(name);
+    bind = (name: string) => {
+        messager.bind(name);
+        return this;
+    };
 
-    define = (name: string, func: (...data: any) => any) =>
+    define = (name: string, func: (...data: any) => any) => {
         messager.define(name, func);
+        return this;
+    };
 
     setwebViewGetter = (getter: WebViewGetter<T>) => {
         this.webViewGetter = getter;
