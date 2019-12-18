@@ -42,7 +42,7 @@ export declare class Messager {
     private send;
     private reply;
     listener: (data: Ipayload<any, string | PayloadStatus>) => void;
-    private initialize;
+    initialize: () => void;
     private _sync;
     sync: () => void;
     bind: (name: string) => (...args: any) => Deferred<any>;

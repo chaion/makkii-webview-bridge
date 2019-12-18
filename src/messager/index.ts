@@ -183,7 +183,7 @@ export class Messager {
         }
     };
 
-    private initialize = () => {
+    initialize = () => {
         if (this.needWait.length > 0) {
             const waiting = this.needWait;
             this.needWait = [];

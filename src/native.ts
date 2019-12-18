@@ -1,30 +1,39 @@
 import { Messager } from "./messager";
 
-export default class Bridge {
-    messager: Messager;
-    constructor(
-        getWebView: () => {
-            injectJavaScript: (data: any) => any;
-        } | null
-    ) {
-        this.messager = new Messager((data: any) => {
+const messager = new Messager(() => {});
+
+export interface IWebview {
+    injectJavaScript: (data: any) => any;
+}
+
+type WebViewGetter<T extends IWebview> = () => T;
+export default class Bridge<T extends IWebview> {
+    private webViewGetter: WebViewGetter<T>;
+
+    constructor(getter: WebViewGetter<T>) {
+        this.webViewGetter = getter;
+        messager.setSenderHandler(data => {
             const injectCode =
                 "{ let evt = document.createEvent('events');\n" +
                 "evt.initEvent('FROM_MAKKII',true,false);\n" +
                 `evt.data = ${JSON.stringify(data)};\n` +
                 "document.dispatchEvent(evt);\n" +
                 "}";
-            const webview = getWebView();
+            const webview = this.webViewGetter();
             if (webview) {
                 webview.injectJavaScript(injectCode);
             }
         });
     }
-    bind = (name: string) => this.messager.bind(name);
+    bind = (name: string) => messager.bind(name);
+
     define = (name: string, func: (...data: any) => any) =>
-        this.messager.define(name, func);
-    setSenderHandler = (handler: (data: any) => void) =>
-        this.messager.setSenderHandler(handler);
+        messager.define(name, func);
+
+    setwebViewGetter = (getter: WebViewGetter<T>) => {
+        this.webViewGetter = getter;
+        messager.initialize();
+    };
     listener = (e: any) => {
         let data: any;
         try {
@@ -34,8 +43,8 @@ export default class Bridge {
             //
         }
         if (data) {
-            this.messager.listener(data);
+            messager.listener(data);
         }
     };
-    isConnect = () => this.messager.isConnect;
+    isConnect = () => messager.isConnect;
 }
