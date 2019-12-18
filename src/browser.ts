@@ -1,56 +1,74 @@
 import { Messager, Deferred } from "./messager";
 const isBrowser = typeof window !== "undefined";
 
+const messager = new Messager((data: any) => {
+    const { ReactNativeWebView } = window;
+    if (isBrowser && ReactNativeWebView) {
+        ReactNativeWebView.postMessage(JSON.stringify(data));
+    } else {
+        throw "No ReactNativeWebView";
+    }
+});
+
 export class Makkii {
-    messager: Messager;
-    account: string = "";
-    lang: string = "";
-    sendTx: (...args: any) => Deferred<any>;
-    _getCurrentAccount: (...args: any) => Deferred<any>;
-    _switchAccount: (...args: any) => Deferred<any>;
+    private _getCurrentAccount: (...args: any) => Deferred<string>;
+    private _switchAccount: (...args: any) => Deferred<string>;
+
+    /**
+     * Current account request from makkii wallet
+     */
+    public account: string = "";
 
     constructor() {
-        this.messager = new Messager((data: any) => {
-            const { ReactNativeWebView } = window;
-            if (isBrowser && ReactNativeWebView) {
-                ReactNativeWebView.postMessage(JSON.stringify(data));
-            } else {
-                throw "No ReactNativeWebView";
-            }
-        });
         // bind
-        this.sendTx = this.messager.bind("sendTx");
-        this._switchAccount = this.messager.bind("switchAccount");
-        this._getCurrentAccount = this.messager.bind("getCurrentAccount");
+        this.sendTx = messager.bind("sendTx");
+        this._switchAccount = messager.bind("switchAccount");
+        this._getCurrentAccount = messager.bind("getCurrentAccount");
+        // define
+        messager.define("setCurrentAccount", this.setCurrentAccount);
     }
 
-    setCurretnAccount = (account: string) => {
+    /**
+     * Send tx
+     * > try send txObj
+     */
+    sendTx: (txObj: any) => Deferred<string>;
+
+    /**
+     * Set current webview account by makkii
+     * > this func will be call by makkii wallet
+     * @param account account address
+     */
+    setCurrentAccount = (account: string) => {
         this.account = account;
     };
-    getCurrentAccount = () =>
-        new Promise((resolve, reject) => {
-            this._getCurrentAccount()
-                .then(r => {
-                    this.account = r;
-                    resolve(r);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    switchAccount = () =>
-        new Promise((resolve, reject) => {
-            this._switchAccount()
-                .then(r => {
-                    this.account = r;
-                    resolve(r);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
 
-    isconnect = () => this.messager.isConnect();
+    /**
+     * Get current account from makkii
+     * > request current account to makkii
+     * @return account address
+     */
+    getCurrentAccount = async () => {
+        const account = await this._getCurrentAccount();
+        this.account = account;
+        return account;
+    };
+
+    /**
+     * Switch account
+     * > try switch account
+     * @return account address
+     */
+    switchAccount = async () => {
+        const account = await this._switchAccount();
+        this.account = account;
+        return account;
+    };
+
+    /**
+     * Check is connect to makkii
+     */
+    isconnect = () => messager.isConnect();
 }
 
 const makkii = new Makkii();
@@ -59,7 +77,7 @@ if (isBrowser) {
     let originalPostMessage = window.originalPostMessage;
 
     if (originalPostMessage) {
-        makkii.messager.sync();
+        messager.sync();
     } else {
         const descriptor: any = {
             get() {
@@ -79,17 +97,15 @@ if (isBrowser) {
             ) {
                 originalPostMessage = value;
                 if (originalPostMessage) {
-                    setTimeout(makkii.messager.sync, 50);
+                    setTimeout(messager.sync, 50);
                 }
             }
         };
         Object.defineProperty(window, "originalPostMessage", descriptor);
     }
     document.addEventListener("FROM_MAKKII", (e: any) => {
-        makkii.messager.listener(e.data);
+        messager.listener(e.data);
     });
 }
-
-window.makkii = makkii;
 
 export default makkii;

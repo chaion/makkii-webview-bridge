@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "package": "tsc",
-    "lint": "eslint src/messager/*ts src/*.ts --fix"
+    "lint": "eslint src/messager/*ts src/*.ts --fix",
+    "doc": "documentation readme --shallow src/** src/**/*.ts --section=API"
   },
   "husky": {
     "hooks": {
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.12.0",
     "@typescript-eslint/parser": "^2.12.0",
+    "documentation": "^12.1.4",
     "eslint": "^6.7.2",
     "eslint-config-prettier": "^6.7.0",
     "eslint-plugin-prettier": "^3.1.2",

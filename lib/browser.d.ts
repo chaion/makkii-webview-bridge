@@ -1,15 +1,38 @@
-import { Messager, Deferred } from "./messager";
+import { Deferred } from "./messager";
 export declare class Makkii {
-    messager: Messager;
+    private _getCurrentAccount;
+    private _switchAccount;
+    /**
+     * Current account request from makkii wallet
+     */
     account: string;
-    lang: string;
-    sendTx: (...args: any) => Deferred<any>;
-    _getCurrentAccount: (...args: any) => Deferred<any>;
-    _switchAccount: (...args: any) => Deferred<any>;
     constructor();
-    setCurretnAccount: (account: string) => void;
-    getCurrentAccount: () => Promise<unknown>;
-    switchAccount: () => Promise<unknown>;
+    /**
+     * Send tx
+     * > try send txObj
+     */
+    sendTx: (txObj: any) => Deferred<string>;
+    /**
+     * Set current webview account by makkii
+     * > this func will be call by makkii wallet
+     * @param account account address
+     */
+    setCurrentAccount: (account: string) => void;
+    /**
+     * Get current account from makkii
+     * > request current account to makkii
+     * @return account address
+     */
+    getCurrentAccount: () => Promise<string>;
+    /**
+     * Switch account
+     * > try switch account
+     * @return account address
+     */
+    switchAccount: () => Promise<string>;
+    /**
+     * Check is connect to makkii
+     */
     isconnect: () => boolean;
 }
 declare const makkii: Makkii;

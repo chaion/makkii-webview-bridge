@@ -1,9 +1,5 @@
 import { EventBus } from "./event_bus";
 
-/**
- * Payload status
- *
- */
 enum PayloadStatus {
     success,
     fail,
