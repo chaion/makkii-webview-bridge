@@ -1,4 +1,4 @@
-import { EventBus } from './event_bus';
+import { EventBus } from "./event_bus";
 /**
  * Payload status
  *
@@ -17,13 +17,14 @@ export interface Ipayload<T, V = PayloadStatus | string> {
 }
 declare type TCallBack = (...data: any) => any;
 export declare class Deferred<T> extends EventBus<T> implements Promise<T> {
-    readonly [Symbol.toStringTag]: 'Promise';
+    readonly [Symbol.toStringTag]: "Promise";
     promise: Promise<T>;
     resolve: (value?: T) => void;
     reject: (reason?: T) => void;
     constructor();
     then: <TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>;
     catch: <TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<T | TResult>;
+    finally(onfinally?: (() => void) | null | undefined): Promise<T>;
 }
 export declare class Messager {
     /**

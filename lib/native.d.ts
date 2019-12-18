@@ -1,11 +1,12 @@
 import { Messager } from "./messager";
 export default class Bridge {
     messager: Messager;
-    constructor(getWebView: () => ({
+    constructor(getWebView: () => {
         injectJavaScript: (data: any) => any;
-    }) | null);
+    } | null);
     bind: (name: string) => (...args: any) => import("./messager").Deferred<any>;
     define: (name: string, func: (...data: any) => any) => void;
+    setSenderHandler: (handler: (data: any) => void) => void;
     listener: (e: any) => void;
     isConnect: () => () => boolean;
 }

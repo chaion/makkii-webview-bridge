@@ -1,11 +1,11 @@
-import { Messager } from './messager';
+import { Messager, Deferred } from "./messager";
 export declare class Makkii {
     messager: Messager;
     account: string;
     lang: string;
-    sendTx: (...args: any) => Promise<any>;
-    _getCurrentAccount: (...args: any) => Promise<any>;
-    _switchAccount: (...args: any) => Promise<any>;
+    sendTx: (...args: any) => Deferred<any>;
+    _getCurrentAccount: (...args: any) => Deferred<any>;
+    _switchAccount: (...args: any) => Deferred<any>;
     constructor();
     setCurretnAccount: (account: string) => void;
     getCurrentAccount: () => Promise<unknown>;
